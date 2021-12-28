@@ -15,10 +15,10 @@ void Game::update()
 		return;
 	}
 
-
+	
 	//Rect{ Arg::center(Cursor::Pos()), DezSamp }.draw(ColorF{ 1.0, 0.0, 0.0, 0.5 });
 	Circle(Cursor::Pos(), DezSamp).draw(Palette::Lightblue);
-
+	
 
 	
 }
@@ -41,6 +41,7 @@ void Game::draw()const
 			}
 		}
 	}*/
+	//Circle(Scene::Center().x, Scene::Center().y + DezSamp / 2, DezSamp * 3).draw(Palette::Grey);
 	for (int32 x = 0; x < 50; ++x)
 	{
 		Line(x * DezSamp, 0, x * DezSamp, Scene::Height()).draw(1,Palette::Cyan);
