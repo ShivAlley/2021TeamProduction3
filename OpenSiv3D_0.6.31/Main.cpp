@@ -11,11 +11,19 @@ void Main()
 	const Font font{ 50 };
 #endif // _DEBUG
 	
-#ifndef _DEBUG
-	System::SetTerminationTriggers(UserAction::CloseButtonClicked);
+#ifdef _DEBUG
+	Window::Resize(1920, 96*11);
+	Scene::SetResizeMode(ResizeMode::Keep);
+	Window::SetFullscreen(true,0);
+	//Window::SetStyle(WindowStyle::Frameless);
+	//Window::Resize(1920, 1080);
 #endif // DEBUG
 
+#ifdef NDEBUG
 	Window::SetFullscreen(true);
+	System::SetTerminationTriggers(UserAction::CloseButtonClicked);
+#endif
+
 	App manager;
 	manager.add<Title>(State::Title);
 	manager.add<Game>(State::Game);

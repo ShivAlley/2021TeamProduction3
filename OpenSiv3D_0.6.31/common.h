@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <Siv3D.hpp>
+#define NONE -1
 enum class State
 {
 	Title,
