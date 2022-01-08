@@ -12,9 +12,10 @@ void Main()
 #endif // _DEBUG
 	
 #ifdef _DEBUG
-	Window::Resize(1920, 96*11);
+	Window::Resize(1920,96*11);
+	Window::Resize(1280,720);
 	Scene::SetResizeMode(ResizeMode::Keep);
-	Window::SetFullscreen(true,0);
+	//Window::SetFullscreen(true);
 	//Window::SetStyle(WindowStyle::Frameless);
 	//Window::Resize(1920, 1080);
 #endif // DEBUG

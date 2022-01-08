@@ -1,10 +1,41 @@
 ﻿#include "Game.h"
 #define DezSamp 96
 
+CookingProgress::CookingProgress()
+{
+	
+	
+}
+
+CookingProgress::~CookingProgress()
+{
+}
+
+
+
+void CookingProgress::Cutting()
+{
+	if (MouseL.down())
+	{
+		cutBegin = Cursor::Pos();
+	}
+	if (MouseL.up())
+	{
+		cutEnd = Cursor::Pos();
+	}
+
+	if (cutEnd)
+	{
+		cutLine = { cutBegin.value(),cutEnd.value() };
+	}
+	recievePoint = onion.intersectsAt(cutLine);
+
+}
+
 Game::Game(const InitData& init)
 	:IScene(init)
 {
-
+	//HACK:cookingProgress = new CookingProgress();
 }
 void Game::update()
 {
@@ -14,29 +45,13 @@ void Game::update()
 	{
 		return;
 	}*/
-
-	//192x288
+	
+	//HACK:cookingProgress->Cutting();
 	
 	
-	if (MouseL.down())
-	{
-		cutBegin = Cursor::Pos();
-		cutEnd = {NONE,NONE};
-	}
-	if (MouseL.up())
-	{
-		cutEnd = Cursor::Pos();
-	}
-	
-	if (cutEnd.x not_eq NONE)
-	{
-		cutLine = { cutBegin,cutEnd };
-	}
-	recievePoint = onion.intersectsAt(cutLine);
 	
 	
-	//Rect{ Arg::center(Cursor::Pos()), DezSamp }.draw(ColorF{ 1.0, 0.0, 0.0, 0.5 });
-	//Circle(Cursor::Pos(), DezSamp).draw(Palette::Lightblue);
+	
 	
 
 	
@@ -57,8 +72,8 @@ void Game::draw()const
 		{
 			Circle(a, 4).draw(Palette::Red);
 		}
-	if (cutLine.hasLength())
-		cutLine.draw(Palette::Orange);
+	
+	cutLine.draw(Palette::Orange);
 
 	for (int32 x = 0; x < 50; ++x)
 	{

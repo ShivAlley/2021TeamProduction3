@@ -333,3 +333,5 @@ ASALocalRun/
 # Local History for Visual Studio
 .localhistory/
 *.exe
+*.exe
+OpenSiv3D_0.6.31/App/OpenSiv3D_0.6.31(debug).exe
