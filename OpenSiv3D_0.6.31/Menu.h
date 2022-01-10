@@ -6,5 +6,7 @@ public:
 	Menu(const InitData& init);
 	void update()override;
 	void draw() const override;
+private:
+	
 };
 
