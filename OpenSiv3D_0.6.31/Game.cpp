@@ -25,22 +25,22 @@ Game::Game(const InitData& init)
 		Comments temptxt;
 		while (reader.readLine(temptxt.text))
 		{
-			flowtingComments << temptxt;
+			neutralComments << temptxt;
 		}
 	}
 
-	cutFoods << onion.collision.asPolygon();
+	cutFoods << onion.collision;
 }
 
 void Game::update()
 {
 	ClearPrint();
-	for (auto p : flowtingComments)
+	for (auto p : neutralComments)
 	{
 		Print << p.text;
 		Print << p.textPos;
 	}
-	for (auto& p : flowtingComments)
+	for (auto& p : neutralComments)
 	{
 		if (p.textPos.has_value())
 		{
@@ -54,13 +54,13 @@ void Game::update()
 	if (commentsWatch.s() == 1)
 	{
 		commentsWatch.restart();
-		if (not flowtingComments.isEmpty())
+		if (not neutralComments.isEmpty())
 		{
 			//ラムダ式の参照渡しでコメントコンテナの要素を変更してその返り値で
 			//無限ループにならないようにしたWhile文を回し、かならず1秒に一回コメントが流れるようにしている
 			std::function<bool()> PostComment = [&]() -> bool
 			{
-				if (auto& post = flowtingComments.choice(); post.isFlow == false)
+				if (auto& post = neutralComments.choice(); post.isFlow == false)
 				{
 					post.isFlow = true;
 					post.textPos = { Scene::Width(), Random<int32>(0, Scene::Height() - 90) };
@@ -71,14 +71,14 @@ void Game::update()
 
 			while (PostComment())
 			{
-				if (not flowtingComments.any([](Comments comm) {return comm.isFlow == false; }))
+				if (not neutralComments.any([](Comments comm) {return comm.isFlow == false; }))
 				{
 					break;
 				}
 			}
 		}
 	}
-	for (auto& ref : flowtingComments)
+	for (auto& ref : neutralComments)
 	{
 		if (ref.textPos.has_value())
 		{
@@ -155,7 +155,7 @@ void Game::draw()const
 	}
 
 	cutLine.draw(Palette::Orange);
-	for (auto& ref : flowtingComments)
+	for (auto& ref : neutralComments)
 	{
 		if (ref.textPos.has_value())
 			ref.font(ref.text).draw(ref.textPos.value().x, ref.textPos.value().y);
