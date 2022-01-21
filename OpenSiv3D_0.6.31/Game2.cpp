@@ -7,6 +7,7 @@ Game2::Game2(const InitData& init)
 
 void Game2::update()
 {
+
 	ClearPrint();
 	if (pasta.collision.leftClicked())
 	{
@@ -27,6 +28,7 @@ void Game2::update()
 	{
 		pasta.collision.moveBy(Cursor::Delta());
 	}
+	
 	if (isgrab[U"salt"])
 	{
 		salt.collision.moveBy(Cursor::Delta());

@@ -31,7 +31,6 @@ private:
 		{U"pasta",false},
 		{U"salt",false},
 	};
-private:
 	Texture texCookingPot{ U"Image/768x768.png" };
 	TextureRegion test = texCookingPot(250, 100, 200, 150);
 
