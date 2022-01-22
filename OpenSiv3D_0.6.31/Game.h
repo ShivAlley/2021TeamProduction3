@@ -6,55 +6,62 @@ public:
 	Game(const InitData& init);
 	void update()override;
 	void draw() const override;
-	void Cutting();
 private:
+	void Cutting();
+	Rect cutSample{ Arg::center(Scene::Center()),TILECHIP };
 	Line cutLine{};
 	Optional<Vec2> cutBegin;
 	Optional<Vec2> cutEnd;
 	Optional<Array<Vec2>> recievePoint;
 	Circle spoon{ TILECHIP / 2,TILECHIP / 2,TILECHIP };
-	Rect cutSample{ Arg::center(TILECHIP / 2,TILECHIP / 2),TILECHIP };
-	Array<Rect> intoFoods;
 	Array<Rect> cutFoods;
+	bool cutNow = false;
+	Rect nowCutting{};
+	/// @brief 値が小さいほど高評価（真っ直ぐ切れている）
+	Array<int32> cutRating;
+	Array<Rect> intoFoods;
 	Rect oniRect{ Arg::center = Scene::Center(), 192, 288 };
-	Circle cookingPot{ Scene::Center().x, Scene::Center().y + TILECHIP / 2, TILECHIP * 4 };
+	Circle frypanCollider{ Scene::Center().x, Scene::Center().y + TILECHIP / 2, TILECHIP * 4 };
+	Circle cookPotCollider{ Scene::Center().x, Scene::Center().y + TILECHIP / 2, TILECHIP * 3 };
+	Polygon rotatePotCollider =
+		cookPotCollider.arcAsPolygon(0_deg, 360_deg, 10, 0);
+	double ang = 0;
+	/// @brief 得点が高いほど高評価
+	double rotateRating = 0;
 	Texture texOnion{ U"Image/onion.png" };
+
+	int32 patterns[4] = { 0, 1, 2, 3 };
 
 	struct Foods
 	{
 		Rect collision;
-		Polygon collider;
-		bool isinto;
+		bool isinto = false;
+		bool isGrab = false;
 	};
 	Foods onion =
 	{
 		{ Arg::center = Scene::Center(), 192, 288 },
-		{},
-		false,
 	};
 	Foods pasta =
 	{
-		{Arg::center(Scene::Center().x + TILECHIP * 6,Scene::Center().y + TILECHIP / 2), TILECHIP * 2, TILECHIP * 8 },
-		{},
-		false,
+		{Arg::center(Scene::Center().x + TILECHIP * 7,Scene::Center().y + TILECHIP / 2), TILECHIP * 2, TILECHIP * 8 },
 	};
 	Foods salt =
 	{
 		{Arg::center(Scene::Center().x - TILECHIP * 6,Scene::Center().y + TILECHIP / 2 - TILECHIP * 3), TILECHIP * 2 },
-		{},
-		false,
 	};
 
-	HashTable<String, bool> isgrab =
+	HashTable<String, Foods> foodManager =
 	{
-		{U"pasta",false},
-		{U"salt",false},
+		{U"pasta",pasta},
+		{U"salt",salt},
 	};
 	Stopwatch stopWatch{ StartImmediately::Yes };
 	Stopwatch commentsWatch{ StartImmediately::Yes };
 	struct Task
 	{
 		String cookingProcess;
+		int32 Progress;
 		int32 priority;
 	};
 	Array<Task> cookingTask;
@@ -66,6 +73,11 @@ private:
 		bool isFlow = false;
 	};
 	Array<Comments> neutralComments;
+
+	
+
+	
+	
 
 #ifdef _DEBUG
 	Polygon testpoly{};

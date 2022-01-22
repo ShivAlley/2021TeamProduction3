@@ -33,6 +33,15 @@ void Main()
 	manager.add<Result>(State::Result);
 	manager.add<Game2>(State::Game2);
 	manager.init(State::Game);
+	TextureAsset::Register(U"onion",U"Image/onion.png");
+	TextureAsset::Register(U"animatedCookPot",U"Image/cookPot.png");
+	TextureAsset::Register(U"woodBoard",U"Image/woodBoard.png");
+	TextureAsset::Register(U"rawPastaInCookPot",U"Image/RawPastaInCookPot.png");
+	TextureAsset::Register(U"pastaInCookPot",U"Image/pastaInCookPot.png");
+	TextureAsset::Register(U"rawPasta",U"Image/Rawpasta.png");
+	TextureAsset::Register(U"salt",U"Image/salt.png");
+	TextureAsset::Register(U"dish",U"Image/dish.png");
+	
 	while (System::Update())
 	{
 		if (not manager.update())
