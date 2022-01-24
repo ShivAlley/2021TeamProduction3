@@ -7,8 +7,28 @@ public:
 	void update()override;
 	void draw() const override;
 private:
+	enum class State : int32
+	{
+		intro,
+		cutting,
+		cutToEntryInterval,
+		entryCookingPot,
+		EntryToStirInterval,
+		stir,
+		BUFFER,//もし最後のステートでpopしてしまった場合に例外を送出しないためのバッファ
+		NUM,//Stateベースで範囲を回すときの回数
+	};
+	//std::unordered_map<State, std::function<void(void)>> switchFunction;
+	std::queue<State> StateMachine;
 	void Cutting();
-	Rect cutSample{ Arg::center(Scene::Center()),TILECHIP };
+	void FlowComments();
+	void entryCookingPot();
+	void stir();
+	void CuttingDraw() const;
+	void FlowCommentsDraw() const;
+	void entryCookingPotDraw() const;
+	void stirDraw()const;
+	//Rect cutSample{ Arg::center(Scene::Center()),TILECHIP / 2 };
 	Line cutLine{};
 	Optional<Vec2> cutBegin;
 	Optional<Vec2> cutEnd;
@@ -19,7 +39,16 @@ private:
 	Rect nowCutting{};
 	/// @brief 値が小さいほど高評価（真っ直ぐ切れている）
 	Array<int32> cutRating;
-	Array<Rect> intoFoods;
+	/// @brief 値が小さいほど高評価
+	Array<int32> burnRating;
+	//std::pair<RectF, double> intoFood;
+	//Array<std::pair<RectF, double>> intoFoods;
+	struct inFood
+	{
+		RectF collider;
+		double brightness;
+	};
+	Array<inFood> intoFoods;
 	Rect oniRect{ Arg::center = Scene::Center(), 192, 288 };
 	Circle frypanCollider{ Scene::Center().x, Scene::Center().y + TILECHIP / 2, TILECHIP * 4 };
 	Circle cookPotCollider{ Scene::Center().x, Scene::Center().y + TILECHIP / 2, TILECHIP * 3 };
@@ -31,6 +60,7 @@ private:
 	Texture texOnion{ U"Image/onion.png" };
 
 	int32 patterns[4] = { 0, 1, 2, 3 };
+	bool isAllin = false;
 
 	struct Foods
 	{
@@ -48,7 +78,7 @@ private:
 	};
 	Foods salt =
 	{
-		{Arg::center(Scene::Center().x - TILECHIP * 6,Scene::Center().y + TILECHIP / 2 - TILECHIP * 3), TILECHIP * 2 },
+		{Arg::center(Scene::Center().x - TILECHIP * 6,Scene::Center().y - TILECHIP / 2 + TILECHIP * 3), TILECHIP * 2 },
 	};
 
 	HashTable<String, Foods> foodManager =
@@ -56,8 +86,6 @@ private:
 		{U"pasta",pasta},
 		{U"salt",salt},
 	};
-	Stopwatch stopWatch{ StartImmediately::Yes };
-	Stopwatch commentsWatch{ StartImmediately::Yes };
 	struct Task
 	{
 		String cookingProcess;
@@ -73,7 +101,9 @@ private:
 		bool isFlow = false;
 	};
 	Array<Comments> neutralComments;
+	Stopwatch commentsWatch{ StartImmediately::Yes };
 
+	Stopwatch stopWatch{ StartImmediately::Yes };
 	
 
 	

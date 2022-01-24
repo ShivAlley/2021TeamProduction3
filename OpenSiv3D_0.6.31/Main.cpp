@@ -41,6 +41,9 @@ void Main()
 	TextureAsset::Register(U"rawPasta",U"Image/Rawpasta.png");
 	TextureAsset::Register(U"salt",U"Image/salt.png");
 	TextureAsset::Register(U"dish",U"Image/dish.png");
+	TextureAsset::Register(U"emptyFrypan",U"Image/emptyFrypan.png");
+	TextureAsset::Register(U"onFoodFrypan",U"Image/onFoodFrypan.png");
+	TextureAsset::Register(U"frypanHand",U"Image/frypanHand.png");
 	
 	while (System::Update())
 	{
