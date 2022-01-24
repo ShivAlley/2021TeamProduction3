@@ -16,7 +16,7 @@ void Main()
 	Window::Resize(1920,96*11);
 	//Window::Resize(1280,720);
 	Scene::SetResizeMode(ResizeMode::Keep);
-	//Window::SetFullscreen(true,0);
+	Window::SetFullscreen(true,0);
 	//Window::SetStyle(WindowStyle::Frameless);
 	//Window::Resize(1920, 1080);
 #endif // DEBUG
@@ -33,7 +33,7 @@ void Main()
 	manager.add<Result>(State::Result);
 	manager.add<Game2>(State::Game2);
 	manager.init(State::Game);
-	TextureAsset::Register(U"onion",U"Image/onion.png");
+	TextureAsset::Register(U"garlic",U"Image/garlic.png");
 	TextureAsset::Register(U"animatedCookPot",U"Image/cookPot.png");
 	TextureAsset::Register(U"woodBoard",U"Image/woodBoard.png");
 	TextureAsset::Register(U"rawPastaInCookPot",U"Image/RawPastaInCookPot.png");
@@ -44,6 +44,12 @@ void Main()
 	TextureAsset::Register(U"emptyFrypan",U"Image/emptyFrypan.png");
 	TextureAsset::Register(U"onFoodFrypan",U"Image/onFoodFrypan.png");
 	TextureAsset::Register(U"frypanHand",U"Image/frypanHand.png");
+	TextureAsset::Register(U"cucumber",U"Image/cucumber.png");
+	TextureAsset::Register(U"onion",U"Image/onion.png");
+	TextureAsset::Register(U"rawSalmon",U"Image/rawSalmon.png");
+	TextureAsset::Register(U"tomato",U"Image/tomato.png");
+	TextureAsset::Register(U"pokedBag",U"Image/pokedBag.png");
+	TextureAsset::Register(U"allInBag",U"Image/allInBag.png");
 	
 	while (System::Update())
 	{
