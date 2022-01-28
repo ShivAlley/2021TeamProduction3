@@ -7,5 +7,6 @@ public:
 	void update()override;
 	void draw()const override;
 private:
+	Stopwatch stopwatch{ StartImmediately::Yes };
 };
 

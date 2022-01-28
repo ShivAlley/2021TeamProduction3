@@ -2,14 +2,25 @@
 
 void Game::intro()
 {
+	if (5.0 < stopWatch.s())
+	{
+		transition.update(true);
+		if (8.0 < stopWatch.s())
+		{
+			StateMachine.pop();
+			cookingTask.pop();
+			return;
+		}
+	}
 
 }
 
 void Game::Cutting()
 {
+	
 	for (auto& p : cutRating)
 	{
-		s3d::Print << p;
+		//s3d::Print << p;
 	}
 
 	if (MouseL.down())
@@ -20,6 +31,7 @@ void Game::Cutting()
 	if (MouseL.up())
 	{
 		cutEnd = Cursor::Pos();
+		AudioAsset(U"cut").playOneShot();
 	}
 	if (cutBegin and cutEnd)
 	{
@@ -30,6 +42,7 @@ void Game::Cutting()
 		if (cutFoods.isEmpty())
 		{
 			StateMachine.pop();
+			cookingTask.pop();
 			return;
 		}
 		nowCutting = cutFoods.front();
@@ -73,6 +86,7 @@ void Game::Cutting()
 
 void Game::entryCookingPot()
 {
+	AudioAsset(U"boil").play();
 	for (auto& map : foodManager)//個々に対しての処理
 	{
 		if (map.second.collision.leftClicked())
@@ -96,22 +110,34 @@ void Game::entryCookingPot()
 		if (map.second.collision.intersects(cookPotCollider) and not map.second.isGrab)
 		{
 			map.second.isinto = true;
+			map.second.collision.setPos(-1000, -1000);
+			AudioAsset(U"powder").playOneShot();
+
+			
 		}
 	}
 
 	spoon.center = Cursor::Pos();
 	//食材が全て鍋に入っていればTrue
 	//bool isAllin = std::all_of(foodManager.begin(), foodManager.end(), [](std::pair<String, Foods> food) {return food.second.isinto; });
+
 	isAllin = std::ranges::all_of(foodManager, [](std::pair<String, Foods> food) {return food.second.isinto; });
+	
 	if (isAllin)
 	{
+		auto func = [&]() {cookingTask.pop(); };
+		static bool callOnce = [&]() { func(); return true; }();
+		auto func2 = [&]() {stopWatchRotate.restart(); };
+		static bool callOnce2 = [&]() { func2(); return true; }();
 		if (rotatePotCollider.intersects(spoon) and MouseL.pressed())
 		{
-			ang += Abs(Cursor::DeltaF().x + Cursor::DeltaF().y) * Scene::DeltaTime();
-			rotateRating += Abs(Cursor::DeltaF().x + Cursor::DeltaF().y) * Scene::DeltaTime();
-			if (rotateRating > 1000)
+			ang += Abs(Cursor::DeltaF().x + Cursor::DeltaF().y);
+			rotateRating += Abs(Cursor::DeltaF().x + Cursor::DeltaF().y);
+			if (rotateRating > 50000 or stopWatchRotate.s() > 10)
 			{
 				StateMachine.pop();
+				cookingTask.pop();
+				AudioAsset(U"boil").stop();
 				return;
 			}
 		}
@@ -123,8 +149,10 @@ void Game::stir()
 	spoon.center = Cursor::Pos();
 	for (auto& it : intoFoods)
 	{
+		
 		if (MouseL.pressed() and spoon.intersects(it.collider) and frypanCollider.contains(it.collider))
 		{
+			AudioAsset(U"stir").play();
 			it.collider.moveBy(Cursor::Delta());
 			it.brightness -= Abs(Cursor::DeltaF().x + Cursor::DeltaF().y) * Scene::DeltaTime() / 1000;
 			//Print << it.moveLength;
@@ -148,9 +176,18 @@ void Game::stir()
 			burnRating << AbsDiff(it.brightness, 0.40) * 1000;
 		}
 		StateMachine.pop();
+		if (cutRating.sum() < 1000)
+			getData().scorePepe++;
+		if (rotateRating > 20000)
+			getData().scorePepe++;
+		if (burnRating.sum() < 300 * 50)
+			getData().scorePepe++;
+		AudioAsset(U"game").stop();
+		changeScene(GameState::Result);
 		return;
 	}
 }
+
 
 void Game::FlowComments()
 {
@@ -158,7 +195,7 @@ void Game::FlowComments()
 	{
 		if (p.textPos.has_value())
 		{
-			if (p.textPos.value().x < -static_cast<double>(p.font.fontSize() * p.text.size()))
+			if (p.textPos.value().x < -static_cast<double>(font.fontSize() * p.text.size()))
 			{
 				p.textPos.reset();
 				p.isFlow = false;
@@ -196,11 +233,124 @@ void Game::FlowComments()
 	{
 		if (it.textPos.has_value())
 		{
-			it.textPos->x -= (Scene::Width() - it.text.size() * it.font.fontSize()) / 5 * Scene::DeltaTime();
-			RectF rect = it.font(it.text).region(it.textPos.value().x, it.textPos.value().y);
-			rect.stretched(it.text.size() * it.font.fontSize());
-			if (it.font(it.text).region(it.textPos.value().x, it.textPos.value().y).leftClicked()
-				and it.font(it.text).region(it.textPos.value().x, it.textPos.value().y).rightPressed())
+			it.textPos->x -= (Scene::Width() - it.text.size() * font.fontSize()) / 5 * Scene::DeltaTime();
+			RectF rect = font(it.text).region(it.textPos.value().x, it.textPos.value().y);
+			rect.stretched(it.text.size() * font.fontSize());
+			if (font(it.text).region(it.textPos.value().x, it.textPos.value().y).leftClicked()
+				and font(it.text).region(it.textPos.value().x, it.textPos.value().y).rightPressed())
+			{
+				{
+					it.isFlow = false;
+					it.textPos.reset();
+				}
+			}
+		}
+	}
+
+	for (auto& p : angryComments)
+	{
+		if (p.textPos.has_value())
+		{
+			if (p.textPos.value().x < -static_cast<double>(font.fontSize() * p.text.size()))
+			{
+				p.textPos.reset();
+				p.isFlow = false;
+			}
+		}
+	}
+	if (commentsWatchangry.s() == 20)
+	{
+		
+		commentsWatchangry.restart();
+		if (not angryComments.isEmpty())
+		{
+			//ラムダ式の参照渡しでコメントコンテナの要素を変更してその返り値で
+			//無限ループにならないようにしたWhile文を回し、かならず1秒に一回コメントが流れるようにしている
+			std::function<bool()> PostComment = [&]() -> bool
+			{
+				if (auto& post = angryComments.choice(); post.isFlow == false)
+				{
+					post.isFlow = true;
+					post.textPos = { Scene::Width(), Random<int32>(0, Scene::Height() - 90) };
+					return false;
+				}
+				return true;
+			};
+
+			while (PostComment())
+			{
+				if (not angryComments.any([](Comments comm) {return comm.isFlow == false; }))
+				{
+					break;
+				}
+			}
+		}
+	}
+	for (auto& it : angryComments)
+	{
+		if (it.textPos.has_value())
+		{
+			it.textPos->x -= (Scene::Width() - it.text.size() * font.fontSize()) / 5 * Scene::DeltaTime();
+			RectF rect = font(it.text).region(it.textPos.value().x, it.textPos.value().y);
+			rect.stretched(it.text.size() * font.fontSize());
+			if (font(it.text).region(it.textPos.value().x, it.textPos.value().y).leftClicked()
+				and font(it.text).region(it.textPos.value().x, it.textPos.value().y).rightPressed())
+			{
+				{
+					it.isFlow = false;
+					it.textPos.reset();
+				}
+			}
+		}
+	}
+
+	for (auto& p : neutralComments)
+	{
+		if (p.textPos.has_value())
+		{
+			if (p.textPos.value().x < -static_cast<double>(font.fontSize() * p.text.size()))
+			{
+				p.textPos.reset();
+				p.isFlow = false;
+			}
+		}
+	}
+	if (commentsWatchhappy.s() == 10)
+	{
+		commentsWatchhappy.restart();
+		if (not happyComments.isEmpty())
+		{
+			//ラムダ式の参照渡しでコメントコンテナの要素を変更してその返り値で
+			//無限ループにならないようにしたWhile文を回し、かならず1秒に一回コメントが流れるようにしている
+			std::function<bool()> PostComment = [&]() -> bool
+			{
+				if (auto& post = happyComments.choice(); post.isFlow == false)
+				{
+					post.isFlow = true;
+					post.textPos = { Scene::Width(), Random<int32>(0, Scene::Height() - 90) };
+					return false;
+				}
+				return true;
+			};
+
+			while (PostComment())
+			{
+				if (not happyComments.any([](Comments comm) {return comm.isFlow == false; }))
+				{
+					break;
+				}
+			}
+		}
+	}
+	for (auto& it : happyComments)
+	{
+		if (it.textPos.has_value())
+		{
+			it.textPos->x -= (Scene::Width() - it.text.size() * font.fontSize()) / 2 * Scene::DeltaTime();
+			RectF rect = font(it.text).region(it.textPos.value().x, it.textPos.value().y);
+			rect.stretched(it.text.size() * font.fontSize());
+			if (font(it.text).region(it.textPos.value().x, it.textPos.value().y).leftClicked()
+				and font(it.text).region(it.textPos.value().x, it.textPos.value().y).rightPressed())
 			{
 				{
 					it.isFlow = false;
@@ -211,14 +361,22 @@ void Game::FlowComments()
 	}
 }
 
+void Game::introDraw() const
+{
+	double t = transition.value();
+	
+	TextureAsset(U"peperoncino").draw();
+	font(U"きょうの料理").drawAt(Scene::Center().x, Scene::Center().y - TILECHIP * 5);
+	font(U"ペペロンチーノ").drawAt(Scene::Center().x, Scene::Center().y - TILECHIP * 3 - TILECHIP / 2);
+	Circle{ Scene::Center(), (t * 1200) }.draw(Palette::Black);
+}
+
 void Game::CuttingDraw()const
 {
+	TextureAsset(U"backWood").drawAt(Scene::Center());
 	TextureAsset(U"woodBoard").drawAt(Scene::Center());
-	TextureAsset(U"onion").drawAt(onion.collision.center());
-	for (const auto& it : cutFoods)
-	{
-		it.draw(ColorF(Palette::Black, 0.5f));
-	}
+	TextureAsset(U"garlic").drawAt(garlic.collision.center());
+	
 	nowCutting.draw(ColorF(Palette::Deepskyblue, 0.5f));
 	if (recievePoint)
 	{
@@ -232,15 +390,26 @@ void Game::CuttingDraw()const
 
 void Game::FlowCommentsDraw()const
 {
-	for (auto& ref : neutralComments)
+	for (const auto& it : neutralComments)
 	{
-		if (ref.textPos.has_value())
-			ref.font(ref.text).draw(ref.textPos.value().x, ref.textPos.value().y);
+		if (it.textPos.has_value())
+			font(it.text).draw(it.textPos.value().x, it.textPos.value().y);
+	}
+	for (const auto& it : happyComments)
+	{
+		if (it.textPos.has_value())
+			font(it.text).draw(it.textPos.value().x, it.textPos.value().y,Palette::Yellow);
+	}
+	for (const auto& it : angryComments)
+	{
+		if (it.textPos.has_value())
+			font(it.text).draw(it.textPos.value().x, it.textPos.value().y,Palette::Red);
 	}
 }
 
 void Game::entryCookingPotDraw()const
 {
+	TextureAsset(U"IH").drawAt(Scene::Center());
 	const uint64 t = Time::GetMillisec();
 	const int32 n = (t / 250 % 4);
 	if (not isAllin and foodManager.at(U"pasta").isinto)
@@ -276,11 +445,12 @@ void Game::entryCookingPotDraw()const
 	{
 		TextureAsset(U"dish").draw(Arg::center(Scene::Center().x - TILECHIP * 6,Scene::Center().y - TILECHIP / 2 + TILECHIP * 3));
 	}
-	rotatePotCollider.draw();
+	//rotatePotCollider.draw();
 }
 
 void Game::stirDraw()const
 {
+	TextureAsset(U"IH").drawAt(Scene::Center());
 	TextureAsset(U"emptyFrypan").drawAt(frypanCollider.center);
 	TextureAsset(U"onFoodFrypan").drawAt(cookPotCollider.center,ColorF(1,1,1,0.3));
 	TextureAsset(U"frypanHand").drawAt(cookPotCollider.center + Point(0,TILECHIP * 6 - TILECHIP / 2));
@@ -296,12 +466,33 @@ void Game::stirDraw()const
 Game::Game(const InitData& init)
 	:IScene(init)
 {
+	AudioAsset(U"game").play();
+	getData().scorePepe = 0;
+	//auto f = [this]() {intro(); this->ease; };
+	//switchFunction2[State::intro] = f;
+	
 	{
-		TextReader reader{ U"comments/normalComments.txt" };
+		TextReader reader{ Resource(U"comments/neutralComments.txt") };
 		Comments temptxt;
 		while (reader.readLine(temptxt.text))
 		{
 			neutralComments << temptxt;
+		}
+	}
+	{
+		TextReader reader{ Resource(U"comments/happyComments.txt") };
+		Comments temptxt;
+		while (reader.readLine(temptxt.text))
+		{
+			happyComments << temptxt;
+		}
+	}
+	{
+		TextReader reader{ Resource(U"comments/angryComments.txt") };
+		Comments temptxt;
+		while (reader.readLine(temptxt.text))
+		{
+			angryComments << temptxt;
 		}
 	}
 	//ここから気合ゾーン---------------
@@ -331,38 +522,92 @@ Game::Game(const InitData& init)
 		State st = static_cast<State>(p);
 		StateMachine.push(st);
 	}
+	{
+		Task tempTask{ U"",0 };
+		cookingTask.push(tempTask);
+		tempTask = Task{ U"にんにくを\nみじん切りにする",1 };
+		cookingTask.push(tempTask);
+		tempTask = Task{ U"岩塩とパスタを\n鍋へブチ込む",2 };
+		cookingTask.push(tempTask);
+		tempTask = Task{ U"鍋ごとブン回して\nかき混ぜる",3 };
+		cookingTask.push(tempTask);
+		tempTask = Task{ U"全部に火が通るように炒める",4 };
+		cookingTask.push(tempTask);
+		tempTask = Task{ U"これはエラーです\nnoexpect",5 };
+		cookingTask.push(tempTask);
+	}
+
+	
+	
 	//今後の研究
-	//switchFunction[State::cutting] = std::bind(&Game::Cutting, this);
+	//いけるswitchFunction[State::cutting] = std::bind(&Game::Cutting, this);
+	//むりswitchFunction2[State::cutting] = std::bind(&Game::Cutting, this);
 }
+
 void Game::update()
 {
-#if 0
-	/*if (4s > stopWatch)
-	{
-		return;
-	}*/
 
-#endif
 	ClearPrint();
 
-	Print << static_cast<int32>(StateMachine.front());
+	//Print << static_cast<int32>(StateMachine.front());
 	switch (StateMachine.front())
 	{
 	case State::intro:
-		StateMachine.pop();
+		intro();
 		break;
 	case State::cutting:
 		Cutting();
 		break;
 	case State::cutToEntryInterval:
-		StateMachine.pop();
+	{
+		auto func = [&]() {stopWatchEase.start(); };
+		static bool callOnce = [&]() { func(); return true; }();
+		trans = Min(stopWatchEase.sF(), 1.0);
+		ease = EaseInOutBack(trans);
+		EasePos = fromWood.lerp(toWood, ease);
+
+		easeCookPot = EaseInOutBack(trans);
+		EasePosCookPot = fromCookPot.lerp(toCookPot, easeCookPot);
+
+		easeSalt = EaseInOutBack(trans);
+		EasePosSalt = fromSalt.lerp(toSalt, easeSalt);
+
+		easePasta = EaseInOutBack(trans);
+		EasePosPasta = fromPasta.lerp(toPasta, easePasta);
+
+		if (stopWatchEase.sF() > 2.0)
+		{
+			StateMachine.pop();
+		}
 		break;
+	}
+	/*TextureAsset(U"woodBoard").drawAt(Scene::Center());
+	TextureAsset(U"garlic").drawAt(garlic.collision.center());*/
 	case State::entryCookingPot:
 		entryCookingPot();
 		break;
-	case State::EntryToStirInterval:
-		StateMachine.pop();
+	case State::entryToStirInterval:
+	{
+		auto func = [&]() {stopWatchEase.restart(); };
+		static bool callOnce = [&]() { func(); return true; }();
+		trans = Min(stopWatchEase.sF(), 1.0);
+		easeFrypan = EaseInOutBack(trans);
+		EasePosFrypan = fromFrypan.lerp(toFrypan, easeFrypan);
+
+		easeDish = EaseInOutBack(trans);
+		EasePosDish = fromDish.lerp(toDish, easeDish);
+
+		easeFadeoutCookPot = EaseInOutBack(trans);
+		EaseFadeoutPosCookPot = fromFadeoutCookPot.lerp(toFadeoutCookPot, easeFadeoutCookPot);
+
+
+		if (stopWatchEase.sF() > 2.0)
+		{
+			StateMachine.pop();
+			break;
+		}
 		break;
+	}
 	case State::stir:
 		stir();
 		break;
@@ -383,22 +628,39 @@ void Game::draw()const
 {
 	constexpr int32 textMergin = 40;
 
-	//Rect(20, 20, 400, 300).draw();//taskViewRect
 
 	switch (StateMachine.front())
 	{
 	case State::intro:
+		introDraw();
 		break;
 	case State::cutting:
 		CuttingDraw();
 		break;
 	case State::cutToEntryInterval:
+	{
+		TextureAsset(U"backWood").drawAt(EasePos);
+		TextureAsset(U"woodBoard").drawAt(EasePos);
+		TextureAsset(U"emptyFrypan").drawAt(EasePosCookPot);
+		TextureAsset(U"IH").drawAt(EasePosCookPot);
+		TextureAsset(U"salt").drawAt(EasePosSalt);
+		TextureAsset(U"rawPasta").drawAt(EasePosPasta);
+		//TextureAsset(U"garlic").drawAt(garlic.collision.center());
 		break;
+	}
 	case State::entryCookingPot:
 		entryCookingPotDraw();
 		break;
-	case State::EntryToStirInterval:
+	case State::entryToStirInterval:
+	{
+		TextureAsset(U"IH").drawAt(EasePosFrypan);
+		TextureAsset(U"frypanHand").drawAt(EasePosFrypan + Point(0,TILECHIP * 4));
+		TextureAsset(U"onFoodFrypan").drawAt(EasePosFrypan);
+		TextureAsset(U"pastaInCookPot").scaled(1.25,1.0).drawAt(EaseFadeoutPosCookPot);
+		TextureAsset(U"dish").drawAt(EasePosDish);
+
 		break;
+	}
 	case State::stir:
 		stirDraw();
 		break;
@@ -413,15 +675,34 @@ void Game::draw()const
 	//stirDraw();
 
 	FlowCommentsDraw();
+	if(cookingTask.front().Progress not_eq 0)
+		Rect(20, 20, 400, 300).draw(HSV(142, 0.42, 0.28,0.6));//taskViewRect//黒板色
+	
 
-	for (int32 x = 0; x < 50; ++x)
+	switch (cookingTask.front().Progress)
 	{
-		Line(x * TILECHIP, 0, x * TILECHIP, Scene::Height()).draw(1, Palette::Cyan);
+	case 0:
+		break;
+	case 1:
+		font(cookingTask.front().cookingProcess)
+			.draw(cookingTask.front().taskView, HSV(140, 0.03, 0.85));//ColorIron
+		break;
+	case 2:
+		font(cookingTask.front().cookingProcess)
+			.draw(cookingTask.front().taskView, HSV(140, 0.03, 0.85));
+		break;
+	case 3:
+		font(cookingTask.front().cookingProcess)
+			.draw(cookingTask.front().taskView, HSV(140, 0.03, 0.85));
+		break;
+	case 4:
+		font(cookingTask.front().cookingProcess)
+			.draw(cookingTask.front().taskView, HSV(140, 0.03, 0.85));
+		break;
+	default:
+		break;
 	}
-	for (int32 y = 0; y < 50; ++y)
-	{
-		Line(0, y * TILECHIP, Scene::Width(), y * TILECHIP).draw(1, Palette::Cyan);
-	}
+	
 }
 //const Point pos = Cursor::Pos();
 //if (InRange(pos.x, 0, image.width() - 1)

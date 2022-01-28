@@ -119,8 +119,10 @@
     <ClCompile Include="Menu.cpp" />
     <ClCompile Include="protosub.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Result.cpp" />
+    <ClCompile Include="Result2.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -327,6 +329,7 @@
     <ClInclude Include="Game2.h" />
     <ClInclude Include="Menu.h" />
     <ClInclude Include="Result.h" />
+    <ClInclude Include="Result2.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Title.h" />
   </ItemGroup>
